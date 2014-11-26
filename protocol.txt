@@ -53,7 +53,8 @@ Demande l'état du jeu modifié
 La valeur de retour est identique à celle de la fonction state()
 La principale différence provient du fait que le processus est mis en attente d'une mise à jour de l'état du jeu
 
-L'appel de state_on_update() est bloquant
+L'appel de state_on_update() est bloquant, ce qui signifie que le jeu ne progresse pas tant que cette fonction 
+ne s'est pas executée en entier
 
 
 
