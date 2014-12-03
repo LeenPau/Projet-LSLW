@@ -41,20 +41,23 @@ STATE<matchid>IS<#players>;<#cells>CELLS:<cellid>[<owner>]<offunits>'<defunits>,
 Example
 
 "STATE20ac18ab-6d18-450e-94af-bee53fdc8fca : 
+
 STATE 								 : nom de la commande
 20ac18ab-6d18-450e-94af-bee53fdc8fca : Identifiant du match
 
-IS 									 : Attribut nb Joueurs pour la partie
-2;								     : nb joueurs
 
-3 			: nombre de cellules
-CELLS:  	 : attributs cellules
-1[2]12'		: Cellule 1, du joueur 2, 12 unités offensives
-4,2[2]15'	: Cellules 4 et 2, du joueur 2, 15 unités offensives
-2,3[1]33'6; : Cellules 2 et 3, du joueur 1, 33 unités offensives, 6 unités défensives
+
+IS2;   								 : nb joueurs
+
+
+
+3CELLS:  							 : 3 Cellules modifiées
+1) 	1[2]12'						 	 : Cellule 1, du joueur 2, 12 unités offensives
+2) 	4,2[2]15'						 : Cellules 4 et 2, du joueur 2, 15 unités offensives
+3) 	2,3[1]33'6; 					 : Cellules 2 et 3, du joueur 1, 33 unités offensives, 6 unités défensives
+
 
 4MOVES: 4 mouvements 
-
 1 <5[2]@232 ' >6[2]@488 ' >3[1]@4330' 2, 
 
 --> Déplacement de la cellule 2 vers la cellule 1:
