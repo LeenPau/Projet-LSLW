@@ -93,3 +93,6 @@ Retourne le temps écoulé (elapsed time) depuis le début du match
 :rtype: entier
 
 /!\ le temps indiqué n'est qu'une approximation (la plus précise possible)
+
+test
+

@@ -34,7 +34,7 @@ Nombre de joueurs possibles : Illimité en théorie (3v3, 5v5, 10v10 …) en pra
 ###Lexique 
 ----------
 
-Terrain : graphe géométrique planaire dont les nœuds sont les cellules du jeu
+Terrain : graphe géométrique planaire dont les nœuds sont les cellules du jeu ;
 Cellule : nœud du graphe, avec ses propriétés
 capacités offensive et défensive
 effectifs offensif et défensif
