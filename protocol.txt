@@ -31,7 +31,7 @@ Le pourcentage des unités offensives utilise la divion entière. Par exemple : 
 
 
 2. state()
-Fonction de demande de l'état courant du jeu
+Fonction de demande de l'état courant du jeu.
 
 :return: état conforme à
 STATE<matchid>IS<#players>;<#cells>CELLS:<cellid>[<owner>]<offunits>'<defunits>,...;\
@@ -40,7 +40,30 @@ STATE<matchid>IS<#players>;<#cells>CELLS:<cellid>[<owner>]<offunits>'<defunits>,
 
 Example
 
-"STATE20ac18ab-6d18-450e-94af-bee53fdc8fcaIS2;3CELLS:1[2]12'4,2[2]15'2,3[1]33'6;4MOVES:1<5[2]@232'>6[2]@488'>3[1]@4330'2,1<10[1]@2241'3"
+"STATE20ac18ab-6d18-450e-94af-bee53fdc8fca : 
+STATE 								 : nom de la commande
+20ac18ab-6d18-450e-94af-bee53fdc8fca : Identifiant du match
+
+IS 									 : Attribut nb Joueurs pour la partie
+2;								     : nb joueurs
+
+3 			: nombre de cellules
+CELLS:  	 : attributs cellules
+1[2]12'
+4,2[2]15'
+2,3[1]33'
+6;
+
+4MOVES:
+1
+<5
+[2]
+@232'
+
+>6[2]@488'
+>3[1]@4330'
+2,1<10[1]@2241'
+3"
 
 <timestamp> en millisecondes, donnée à vitesse x1 : top départ des unités de la cellule source. 
 <direction> désigne le caractère '>' ou '<' et indique le sens des unités en mouvement en suivant la pointe de flèche.
