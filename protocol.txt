@@ -49,21 +49,24 @@ IS 									 : Attribut nb Joueurs pour la partie
 
 3 			: nombre de cellules
 CELLS:  	 : attributs cellules
-1[2]12'
-4,2[2]15'
-2,3[1]33'
-6;
+1[2]12'		: Cellule 1, du joueur 2, 12 unités offensives
+4,2[2]15'	: Cellules 4 et 2, du joueur 2, 15 unités offensives
+2,3[1]33'6; : Cellules 2 et 3, du joueur 1, 33 unités offensives, 6 unités défensives
 
-4MOVES:
-1
-<5
-[2]
-@232'
+4MOVES: 4 mouvements 
 
->6[2]@488'
->3[1]@4330'
-2,1<10[1]@2241'
-3"
+1 <5[2]@232 ' >6[2]@488 ' >3[1]@4330' 2, 
+
+--> Déplacement de la cellule 2 vers la cellule 1:
+1) 5 unités du joueur 2 au temps 232
+
+--> Déplacement de la cellule 1 vers la cellule 2:
+2) 6 unités du joueur 2 au temps 488
+3) 3 unités du joueur 1 au temps 4330
+
+1<10[1]@2241'3"
+--> Déplacement de la cellule 3 vers la cellule 1
+4) 10 unités du joueur 1 au temps 2241
 
 <timestamp> en millisecondes, donnée à vitesse x1 : top départ des unités de la cellule source. 
 <direction> désigne le caractère '>' ou '<' et indique le sens des unités en mouvement en suivant la pointe de flèche.
@@ -72,6 +75,8 @@ CELLS:  	 : attributs cellules
 
 3. state_on_update()
 Demande l'état du jeu modifié
+
+--> Retourne uniquement les éléments modifiés par rapport à la dernière MAJ demandée de l'état du plateau
 
 La valeur de retour est identique à celle de la fonction state()
 La principale différence provient du fait que le processus est mis en attente d'une mise à jour de l'état du jeu
