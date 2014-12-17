@@ -1,0 +1,100 @@
+Bonsoir,
+> 
+> Je me suis intéressé au protocol de communication mis en place pour le
+> projet LSLW et j'ai quelques questions concernant le formalisme, dans un
+> premier temps, et les mécanismes d'appel des fonctions que vous avez
+> proposées dans votre fichier lolipooo.py dans un second temps.
+> 
+> 1) Le formalisme du protocol de communication client/serveur :
+> 
+> J'ai tenté d'élaborer un "déchiffrage" de votre chaine de caractère INIT
+> qui permet de créer notre structure de données au début du match et j'ai
+> rencontré des difficultés dans le parsage de la partie suivante :
+> 
+> "3CELLS:1(23,9)'2'30'8'I,2(41,55)'1'30'8'II,3(23,103)'1'20'5'I"
+> 
+> de votre exemple  qui correspond à la partie théorique suivante :
+> 
+> <#cells>CELLS:<cellid>(<x>,<y>)'<radius>'<offsize>'<defsize>'<prod>,...;\
+> 
+> En effet, il est impossible d'opérer une séparation de cette chaine de
+> caractère en utilisant une fonction telle que "split()" avec le caractère
+> "," qui sépare plusieurs "niveaux" de l'information fournie par cette
+> chaine de caractère (on retrouve ce caractère aussi bien pour séparer les
+> "coordonnées" d'une cellule, que pour séparer les différentes cellules
+> entre elles)
+> 
+> J'aurai donc souhaité savoir s'il était possible de remplacer le caractère
+> "," qui sépare les différentes cellules entre elles, par un caractère plus
+> neutre (ou du moins non utilisé jusqu'alors) tel que "|" par exemple. Si
+> cela ne pose pas de soucis bien évidemment.
+non, ce n’est pas possible (ni souhaitable, ni nécessaire).
+> 
+> Si une telle modification n'était pas envisageable, auriez-vous une astuce
+> pour séparer les différentes informations de cette partie de la chaine de
+> caractère ? (sachant que je suis parti du principe qu'on ne pouvait pas
+> purement et simplement compter les caractère pour en extraire
+> l'information car les cellules peuvent théoriquement dépasser le nombre de
+> 9 ce qui décalerait le comptage).
+il faut te pencher sur la librairie native « re » et les fonctions match, search,
+find par exemple.
+Il faudra sans doute élaborer aussi une ou deux « expressions régulières » pour
+parvenir à tes fins.
+> 
+> 2) Le mécanisme d'appel des fonctions :
+> 
+> Concernant les fonctions fournies (c'est à dire register_pooo(uid) et
+> init_pooo(init_string) principalement) j'ai quelques questions :
+> 
+> Premièrement : Qui appelle ces fonctions ?
+> Par exemple pour la fonction register_pooo(uid) j'imagine que c'est nous
+> qui l'appellons afin d'enregistrer notre robot,
+non. C’est la partie du client (robot-joueur) que vous ne maîtrisez pas qui se
+charge de l’appel de cette fonction.
+Vous avez juste à en fournir le corps (contenu). 
+> mais ce que je ne
+> comprends pas, c'est comment nous sommes censés générer notre identifiant
+> utilisateur. Le choix est-il libre (si c'est le cas, quel formalisme
+> utiliser pour le générer) ? sinon, comment pouvons nous le passer en
+> paramètre de cette fonction sans le posséder (ou comment le récupère-t-on
+> ?)
+Vous n’avez pas à vous préoccuper de cela. Le paramètre est fourni de « l’extérieur
+»  à la fonction.
+Dans le corps de la fonction, vous n’avez qu’à récupérer la valeur (uid) et en faire
+ce que bon vous semble (par exemple,
+la stocker dans une structure à vous, pour la réutiliser plus tard...). 
+> 
+> Dans un second temps, pour la fonction init_pooo(init_string) :
+> 
+> J'aurai souhaité savoir ici aussi, de quelle manière récupérer la string
+> d'initialisation. Celle-ci est-elle envoyée par le serveur aussitôt
+> l'enregistrement du robot effectué ? ou alors devons-nous envoyer une
+> requête précise pour récupérer cette chaine de caractère.
+idem. C’est nous qui nous chargeons d’appeler la fonction. Vous n’avez qu’a, là encore,
+récupérer la chaîne passée en paramètre et en faire un traitement approprié dans le
+corps de la fonction.  
+> 
+> Enfin, j'aurai aimé avoir quelques précisions sur la manière d'obtenir
+> l'état mis à jour du plateau de jeu. L'état du plateau nous est-il envoyé
+> régulièrement et automatiquement par le serveur, ou alors sommes-nous
+> supposés envoyer une requête au serveur afin d'obtenir ces informations.
+> 
+> Dans le second cas, quelle requête envoyer et comment différencier les
+> requêtes de la fonction STATE, et de la fonction STATE on update.
+une «  requête »  =  un appel de la fonction state()
+elle vous retourne exactement l’état du jeu, à tout instant (donc à l’instant où
+vous l’appelez).
+L’état du jeu se présente sous la forme d’une chaîne de caractère, à analyser comme
+la chaîne d’initialisation.
+Le détail est fourni par le protocole.
+La fonction state_on_update(), quant à elle, vous retourne exactement la même chose
+que state(),
+mais en vous renvoie le résultat qu’à partir du moment où l’état à changé depuis
+votre dernier appel state ou state_on_update.
+Cela signifie que cette fonction est « bloquante » (l’exécution de votre code
+s’arrête à l’endroit de l’appel à state_on_update, jusqu’à
+ce qu’un nouvel état du jeu soit disponible.
+> 
+> Je vous remercie par avance pour ces compléments d’information.
+> 
+Espérant avoir répondu à tes interrogations,
