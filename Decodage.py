@@ -1,6 +1,20 @@
 import re
 
+"""
+Classe destinée à accueillir les fonctionnalités de decodage des string INIT et STATE
+"""
 class Decodage:
+	"""
+	Utilisation : 
+	1) Creation d'un objet Decodage avec comme parametre la string a decoder
+	2) La fonction __init__ se charge d'identifier le type de message a decoder
+	3) On traite la chaine de caractere et on les stock dans un tableau
+
+	ex : state = Decodage(state)
+	state.state["method"] contient le nom de la methode 
+	state.state["match_id"] contient l'identifiant du match
+	...
+	"""
 	def __init__(self, toDecode):
 		self.toDecode = toDecode
 		
@@ -21,10 +35,16 @@ class Decodage:
 	def __str__(self):
 		return str(self.state["method"] + "\n" + self.state["match_id"] + "\n" + self.state["nbPlayers"] + "\n" + self.state["cells"] + "\n" +self.state["moves"])
 
+	"""
+	Fonction d'affichage du contenu d'un dictionnaire
+	"""
 	def print_dict(dico):
 		for key, value in dico.items():
 			print(key, " : ", value)
 
+	"""
+	Fonction de decodage de la partie identification d'une chaine STATE
+	"""
 	def state_beg(string):
 		"""
 		Decodage de la première partie de la string STATE
@@ -35,10 +55,10 @@ class Decodage:
 		nbPlayers = methode.group(6)
 		return (method, match_id, nbPlayers)
 
+	"""
+	Fonction de decodage de la partie CELLS de la string STATE
+	"""
 	def state_cells(string):
-		"""
-		Decodage de la partie CELLS de la string STATE
-		"""
 		cells = []
 		infos = re.search(r"([0-9]CELLS)([:,]?[0-9]\[[0-9]*\][0-9]*'[0-9]*[,]?)*", string)
 		complete = infos.group(0)
@@ -51,10 +71,10 @@ class Decodage:
 			cells.append(tmp)
 		return cells
 
+	"""
+	Fonction de decodage de la partie MOVES de la string STATE
+	"""
 	def state_moves(string):
-		"""
-		Decodage de la partie MOVES de la string STATE
-		"""
 		toAdd = ""
 		moves = []
 		initial = re.search(r"([0-9]MOVES:)(([0-9]*[<>][0-9]*\[[0-9]\]@[0-9]*['][0-9]*)*[,]*)*", string)
@@ -78,10 +98,11 @@ class Decodage:
 				else:
 					toAdd = cellule_debut+","+meta.group(1)+","+cellule_fin+","+meta.group(2)+","+meta.group(3)+","+meta.group(4)
 				moves.append(toAdd)
-		#state["moves"] = moves
 		return moves
 
-
+	"""
+	Fonction de constitution et d'affichage des informations d'une string STATE
+	"""
 	def decode_state(string):
 		"""
 		STATE<matchid>IS<#players>;<#cells>CELLS:<cellid>[<owner>]<offunits>'<defunits>,...;\
