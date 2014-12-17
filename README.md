@@ -1,6 +1,5 @@
 #Projet-LSLW
 ##Règles du jeu : Little Stars for Little Wars 2
----
 
 1. Le terrain est généré par le système, avec une position de
 départ (une cellule unique) attribuée à chaque joueur/robot
@@ -27,7 +26,6 @@ sont résolus immédiatemment
 8. Nombre de joueurs possibles : Illimité en théorie (3v3, 5v5, 10v10 …) en pratique en 1v1
 
 ##Lexique 
----
 
 * **Terrain** : graphe géométrique planaire dont les nœuds sont les cellules du jeu.
 * **Cellule** : nœud du graphe, avec ses propriétés
@@ -43,7 +41,6 @@ sont résolus immédiatemment
 * **Cadence** de production : vitesse à laquelle sont créées les unités dans une cellule.
 
 ##Objectifs du projet
----
 
 Le projet consiste à créer un programme en python qui va modéliser le fonctionnement “métier” du jeu Little Stars for Little Wars 2 (LSLW2), sans affichage d’interface graphique.
 Le programme se devra d’être multijoueur et va donc nécessiter une communication client/serveur.
