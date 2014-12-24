@@ -129,7 +129,8 @@ class Terrain :
             i += 1
         return chaine
 
-def main() :
+
+if __name__ == '__main__' :
     c1 = Cellule(name = "1", player = 1, nbUnit_Off = 0, capacity_Off = 10, prodRate_Off = 3, nbUnit_Def = 0, capacity_Def = 10, prodRate_Def = 1)
     c2 = Cellule(name = "2")
     c3 = Cellule(name = "3")
@@ -162,6 +163,3 @@ def main() :
     terrain = Terrain(cellules, liste_adjacence)
     
     print(terrain)
-
-if __name__ == '__main__' :
-    main()
