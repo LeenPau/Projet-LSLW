@@ -1,5 +1,5 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
 
 """Serveur de jeu temps réel Pooo
         
@@ -10,16 +10,27 @@ import socket
 import threading
 import logging
 import re
+import argparse
 
-ROOM_SIZE=4
+logging.basicConfig(level=logging.DEBUG)
+
+
+parser = argparse.ArgumentParser(description='Pooo game server', epilog='Example: $python poooserver.py -P 9876 -B 2048 --speed 2 --roomsize 4')
+parser.add_argument('-P','--port', type=int, default=9876, help='port number of the Pooo server (Default: 9876)')
+parser.add_argument('-B','--bufsize', type=int, choices=[1024, 2048, 4096], default=2048, help='size of the socket buffer (Default: 2048)')
+parser.add_argument('-s','--speed', type=int, choices=[1, 2, 4], default=1, help='speed of the game (Default: 1)')
+parser.add_argument('-r','--roomsize', type=int, default=4, help='size of the room (Default: 4, accepted values: 2+)')
+#parser.add_argument('-M','--matchsize', type=int, default=2, help='number of bots in a match (Default: 2, accepted values: 2)')
+
+# args.server et args.player
+args = parser.parse_args()
+
+BUFSIZE=args.bufsize
+ROOM_SIZE=args.roomsize
+SPEED=args.speed
+HOST, PORT = "localhost", args.port
 
 from pooogame import Room, Contest, Player
-
-
-BUFSIZE=2048
-
-HOST, PORT = "localhost", 9876
-
 
 #LOG_FILENAME=
 #LEVELS = { 'debug':logging.DEBUG,
@@ -40,7 +51,7 @@ class PoooHandler(socketserver.BaseRequestHandler):
     def handle(self):
         self.request.set_inheritable(True)  # tricks pour la version python 3.4 (3 jours de debug...)
         # register new player
-        p=Player(self.request, self.client_address, self.server.engage)
+        p=Player(self.request, self.client_address, self.server.engage, bufsize=BUFSIZE)
         p.start()
         self.server.join(p)        
         return
@@ -62,7 +73,7 @@ class PoooServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
 
 def fucking_failing_main():
     server = PoooServer((HOST, PORT), PoooHandler)
-    room=Room(server)
+    room=Room(server, room_size=ROOM_SIZE, speed=SPEED)
     room.start()
     
     # Démarre un thread pour le serveur -- chaque nouvelle connexion entrante
@@ -90,11 +101,11 @@ class Server:
 
 def main(): # version avec socket bloquante, mais au moins ça fonctionne !
     server=Server()
-    room = Room(server, ROOM_SIZE)
+    room = Room(server, ROOM_SIZE, SPEED)
     room.start()
 
     ssock = socket.socket()
-    ssock.bind(('', 9876))
+    ssock.bind(('', PORT))
     ssock.listen(ROOM_SIZE*3)
     while True:
         try: 
