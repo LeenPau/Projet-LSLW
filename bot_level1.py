@@ -18,6 +18,7 @@ import logging # mieux que des print partout
 import inspect # pour faire de l'introspection
 from parsage import *
 from struct import *
+from random import randint
 
 
 """
@@ -82,10 +83,19 @@ def play_pooo():
             print(value)
 
         # (5) TODO: traitement de state et transmission d'ordres order(msg)
+        #Stratégie d'envoi systématique dès qu'une cellule a au moins 5 unités offensives elle les envoie à une cellule voisine (ennemie ou alliée)
         for cle,cellule in m.cellules.items():
-            for key,value in cellule.neighbours.items():
-                if((m.cellules[key].player != m.me) and m.cellules[cle].offunits > 0):
-                    order_string = "[" + str(identifiant) + "]" + "MOV100FROM" + str(cle) + "TO" + str(key)
-                    print("order string : ", order_string) 
-                    order(order_string)
-    
+            for key_voisin,voisin in cellule.neighbours.items():
+                compteur = 0
+                dest = 0
+                rand = randint(0,len(cellule.neighbours)-1)
+                for key in cellule.neighbours.keys():
+                    if compteur == rand:
+                        dest = key
+                        break
+                    else:
+                        compteur += 1
+            if(m.cellules[cle].offunits >= 5):
+                order_string = "[" + str(identifiant) + "]" + "MOV50FROM" + str(cle) + "TO" + str(dest)
+                print("order string : ", order_string) 
+                order(order_string)
