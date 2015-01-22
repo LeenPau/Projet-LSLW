@@ -19,6 +19,7 @@ import inspect # pour faire de l'introspection
 from parsage import *
 from struct import *
 from random import randint
+from topologie import *
 
 
 """
@@ -76,10 +77,10 @@ def play_pooo():
 
         if moves != 0:
             for move in moves:
-                m.moves[move['timestamp']] = move
+                time = etime()
+                m.moves_history[time] = move
 
-        #Affichage de toutes les cellules
-        for key,value in m.cellules.items():
-            print(value)
+        #print(m.moves_history)
 
         # (5) TODO: traitement de state et transmission d'ordres order(msg)
+        

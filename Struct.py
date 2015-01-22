@@ -59,7 +59,7 @@ class Match():
         self.speed      = data['speed']
         
         self.cellules = {}
-        self.moves = {}
+        self.moves_history = {}
 
         # Pour chaque cellule récupérée en décodant la chaine d'initialisation,
         # on crée un dictionnaire contenant des cellules et dont les clés sont les cellid des cellules.

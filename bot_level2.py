@@ -73,7 +73,7 @@ def play_pooo():
             for cellule in cells:
                 cell_temp = m.cellules[cellule['cellid']]
                 cell_temp.update(cellule)
-
+        
         if moves != 0:
             for move in moves:
                 time = etime()
@@ -84,20 +84,40 @@ def play_pooo():
         for key,value in m.cellules.items():
             print(value)
 
+        #DIJKSTRA
+        neighbours = {}
+        for key,value in m.cellules.items():
+            print("voisins de :", key, " --> ",  value.neighbours)
+            neighbours[key] = value.neighbours
+            #print(value)
+
+        #création d'un tableau des cellules alliées
+        ally = []
+        for cle,cellule in m.cellules.items():
+            if cellule.player == m.me:
+                ally.append(cle)
+        print("ally : ", ally)
+
+
+        #création d'un tableau des cellules ennemies
+        ennemy = []
+        for cle,cellule in m.cellules.items():
+            if (cellule.player != m.me):
+                ennemy.append(cle)
+        print("ennemy : ", ennemy)
+
+        #on affiche le plus 
+        for allie in ally:
+            for ennemi in ennemy:
+                print("dijkstra cellules : ", allie, " / ", ennemy)
+                #print(dijkstra(allie, ennemi, neighbours))
+
         # (5) TODO: traitement de state et transmission d'ordres order(msg)
         #Stratégie d'envoi systématique dès qu'une cellule a au moins 5 unités offensives elle les envoie à une cellule voisine (ennemie ou alliée)
-        for cle,cellule in m.cellules.items():
-            for key_voisin,voisin in cellule.neighbours.items():
-                compteur = 0
-                dest = 0
-                rand = randint(0,len(cellule.neighbours)-1)
-                for key in cellule.neighbours.keys():
-                    if compteur == rand:
-                        dest = key
-                        break
-                    else:
-                        compteur += 1
-            if(m.cellules[cle].offunits >= 5):
-                order_string = "[" + str(identifiant) + "]" + "MOV50FROM" + str(cle) + "TO" + str(dest)
-                print("order string : ", order_string) 
-                order(order_string)
+        
+
+        #Tableau de distances
+
+        #tester notre défense
+        #tester les attaques possibles
+
