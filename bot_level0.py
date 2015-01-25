@@ -81,6 +81,5 @@ def play_pooo():
                 m.moves_history[time] = move
 
         #print(m.moves_history)
-
         # (5) TODO: traitement de state et transmission d'ordres order(msg)
         

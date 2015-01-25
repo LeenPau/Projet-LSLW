@@ -153,19 +153,17 @@ def decodage_state(string) :
                         if meta is not None:
                             if(meta.group(1) == "<"):
                                 toAdd['source']         = int(cellule_fin)
-                                toAdd['destinatation']  = int(cellule_debut)
+                                toAdd['destination']    = int(cellule_debut)
                                 toAdd['nbUnits']        = int(meta.group(2))
                                 toAdd['owner']          = int(meta.group(3))
                                 toAdd['timestamp']      = str(meta.group(4))
                             else:
                                 toAdd['source']         = int(cellule_fin)
-                                toAdd['destinatation']  = int(cellule_debut)
+                                toAdd['destination']  = int(cellule_debut)
                                 toAdd['nbUnits']        = int(meta.group(2))
                                 toAdd['owner']          = int(meta.group(3))
                                 toAdd['timestamp']      = str(meta.group(4))
 
                             data['moves'].append(toAdd)
-        else:
-            data['moves'] = 0
 
         return data

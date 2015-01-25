@@ -21,6 +21,7 @@ class Cellule() :
         self.offunits   = 0
         self.offsize    = data['offsize']
         self.offprod    = data['prod']
+        self.coeff      = 0
         
         self.defunits   = 0
         self.defsize    = data['defsize']
@@ -37,6 +38,13 @@ class Cellule() :
             # soit elle est en deuxième position
             if arete['cellid2'] == self.cellid :
                 self.neighbours[arete['cellid1']] = arete['distance']
+
+        if self.offprod == 3:
+            self.coeff = 1
+        elif self.offprod == 2:
+            self.coeff = 1.5
+        else:
+            self.coeff = 2
 
 
     def update(self, data) :

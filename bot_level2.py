@@ -19,6 +19,7 @@ import inspect # pour faire de l'introspection
 from parsage import *
 from struct import *
 from random import randint
+from topologie import dijkstra, set_rang
 
 
 """
@@ -60,64 +61,289 @@ def init_pooo(init_string):
 Active le robot-joueur
 """
 def play_pooo():
-    logging.info('Entering play_pooo fonction from {} module...'.format(inspect.currentframe().f_back.f_code.co_filename))
-    while True :
-        state_string = state_on_update()
-        data_state = decodage_state(state_string)
-        
-        cells = data_state['cells'] #informations sur les cellules
-        moves = data_state['moves'] #informations sur les mouvements
+    aide = {}
 
-        #Mise à jour de la structure / INFOS MOVES
-        if cells != 0:
-            for cellule in cells:
-                cell_temp = m.cellules[cellule['cellid']]
-                cell_temp.update(cellule)
-        
-        if moves != 0:
-            for move in moves:
-                time = etime()
-                m.moves_history[time] = move
-        #print(m.moves_history)
+    #Initialise le dictionnaire d'aide pour toutes les cellules à 0 (il va servir à déterminer les cellules ayant besoin d'aide pour contenir une attaque)
+    for cellule in m.cellules.values():
+        aide[cellule.cellid] = 0
 
-        #Affichage de toutes les cellules
-        for key,value in m.cellules.items():
-            print(value)
+    while True:
+        msg=state_on_update()
+        if 'STATE' in msg:
+            logging.debug('[play_pooo] Received state: {}'.format(msg))
+            data_state = decodage_state(msg)
+            
+            cells = data_state['cells'] #informations sur les cellules
+            moves = data_state['moves'] #informations sur les mouvements
 
-        #DIJKSTRA
-        neighbours = {}
-        for key,value in m.cellules.items():
-            print("voisins de :", key, " --> ",  value.neighbours)
-            neighbours[key] = value.neighbours
-            #print(value)
+            #Mise à jour des informations concernant les cellules en fonction du state reçu
+            if cells != []:
+                for cellule in cells:
+                    cell_temp = m.cellules[cellule['cellid']]
+                    cell_temp.update(cellule)
+            
+            #Mise à jour de la structure en fonction des moves reçus
+            if moves != []:
+                for move in moves:
+                    time = etime()
+                    m.moves_history[time] = move
 
-        #création d'un tableau des cellules alliées
-        ally = []
-        for cle,cellule in m.cellules.items():
-            if cellule.player == m.me:
-                ally.append(cle)
-        print("ally : ", ally)
+            #Affichage de toutes les cellules
+            for key,value in m.cellules.items():
+                print(value)
+                print("cellule : ", key, "voisins : ", value.neighbours)
 
 
-        #création d'un tableau des cellules ennemies
-        ennemy = []
-        for cle,cellule in m.cellules.items():
-            if (cellule.player != m.me):
-                ennemy.append(cle)
-        print("ennemy : ", ennemy)
+            #On crée un dictionnaire qui va servir à appliquer l'algorithme de dijkstra et ainsi déterminer les rangs des différentes cellules
+            matrice = {}
+            for key,value in m.cellules.items():
+                matrice[key] = value.neighbours
 
-        #on affiche le plus 
-        for allie in ally:
-            for ennemi in ennemy:
-                print("dijkstra cellules : ", allie, " / ", ennemy)
-                #print(dijkstra(allie, ennemi, neighbours))
+            #création d'un tableau des cellules alliées
+            ally = []
+            for cle,cellule in m.cellules.items():
+                if cellule.player == m.me:
+                    ally.append(cle)
+            print("ally : ", ally)
 
-        # (5) TODO: traitement de state et transmission d'ordres order(msg)
-        #Stratégie d'envoi systématique dès qu'une cellule a au moins 5 unités offensives elle les envoie à une cellule voisine (ennemie ou alliée)
-        
+            #création d'un tableau des cellules ennemies
+            ennemy = []
+            for cle,cellule in m.cellules.items():
+                if (cellule.player != m.me and cellule.player != -1):
+                    ennemy.append(cle)
+            print("ennemy : ", ennemy)
+            
+            # (5) TODO: traitement de state et transmission d'ordres order(msg) 
+            rangs = {}
+            fronts, ravitailleurs = {}, {}
 
-        #Tableau de distances
+            #Mise à jour du rang de toutes les cellules alliées
+            for c_alliee in ally:
+                rang_minimum = -1
+                for c_ennemie in ennemy:
+                    if (set_rang(c_alliee, c_ennemie, matrice) < rang_minimum) or (rang_minimum == -1):
+                        rang_minimum = set_rang(c_alliee, c_ennemie, matrice)
+                        rangs[c_alliee] = rang_minimum
 
-        #tester notre défense
-        #tester les attaques possibles
+            #En fonction du rang qui leur est affecté, les cellules divisées en deux catégories 
+            #Les ravitailleurs : qui ne sont pas au contact des ennemies
+            #Les fronts : qui sont à exactement 1 "saut" d'un ou plusieurs ennemis
+            for cellule, rang in rangs.items():
+                if rang == 1:
+                    fronts[cellule] = rang
+                else:
+                    ravitailleurs[cellule] = rang
 
+            #Affichage des cellules du front
+            for cellule_front,rang in fronts.items():
+                print("fronts : ", cellule_front, " rang : ", rang)
+
+            #Affichage des cellules ravitailleuses
+            for cellule_ravit,rang in ravitailleurs.items():
+                print("ravitailleurs : ", cellule_ravit, " rang : ", rang)
+
+
+            """
+            =====================================================================================================================
+                        ======================================= STRATEGIE =======================================
+            =====================================================================================================================
+            """
+            # on commence par les cellules du front pour savoir si elles ont besoins d'aides avant de commencer à gérer les cellules ravitailleuses
+            for cellule in fronts.keys() :
+                est_attaque = False
+                max_temps = 0 
+                nb_attaquants = 0
+
+                # On cherche si il y a des déplacements offensifs vers la cellule considérée
+                for move in moves :
+                    if (move['destination'] == cellule) and (move['owner'] != m.me) : # On cherche si il y a des déplacements aggressifs vers notre cellule
+                        est_attaque == True
+                        nb_attaquants += move.nbUnits # si c'est le cas, on compte le nombre d'attaquants total
+
+                        #max_temps, on regarde si on arrive à stopper toutes les attaques, on prend l'attaquant le plus éloigné pour le calcul
+                        if move['timestamp'] > max_temps :
+                            max_temps = move['timestamp']
+
+
+                if est_attaque == True : # si je suis attaqué.
+                    capacite_reception = (m.cellules[cellule].offunits + m.cellules[cellule].defunits + (max_temps * m.cellules[cellule].offprod) )
+                    if capacite_reception < nb_attaquants : # les attaquants sont plus forts
+                        # Il faut demander de l'aide : la différence entre les attaquants et la capacité de reception + 1
+                        aide[cellule] = ( nb_attaquants - (m.cellules[cellule].offunits + m.cellules[cellule].defunits + (max_temps * m.cellules[cellule].offprod) ) +1 )
+                        
+                    elif capacite_reception + 1 > nb_attaquants : # On est plus fort, on peut utiliser le surplus pour attaquer
+                        # il y a au moins 2 unités, d'où le "+ 1" :
+                        # une pour garder le controle de la cellule
+                        # et une autre au minimum pour faire une attaque
+
+                        # On détermine la cellule la plus rentable
+                        target = 100000000
+                        d = 0
+
+                        #enlever les cellules alliées lors du parcours
+                        for cel,distance in m.cellules[cellule].neighbours.items():
+                            if (target > (distance + m.cellules[cel].offunits + m.cellules[cel].defunits) * m.cellules[cel].coeff) and m.cellules[cel].player != m.me:
+                                target = (distance + m.cellules[cel].offunits + m.cellules[cel].defunits) * m.cellules[cel].coeff
+                                cible = cel
+                                d = distance
+                        
+                        print("target : ", target, " / cible", cible)
+                        
+                        envoi = (capacite_reception + 1) - nb_attaquants
+
+                        # order avec comme pourcentage : envoi/cellule.offunits
+                        toSend = round((envoi / m.cellules[cellule].offunits)*100)
+                        order_string = "[" + str(identifiant) + "]MOV" + str(toSend) + "FROM" + str(cellule) + "TO" + str(cible)
+                        print("order string : ", order_string)
+                        order(order_string)
+                    
+                    else : # égalite, mais il faut au moins 1 de plus pour garder la cellule
+                        aide[cellule.cellid] = 1
+                        
+
+
+                else : # je ne suis pas attaqué donc j'attaque le plus rentable
+                    target = 100000000
+                    d = 0
+
+                    #enlever les cellules alliées lors du parcours
+                    for cel,distance in m.cellules[cellule].neighbours.items():
+                        if (target > (distance + m.cellules[cel].offunits + m.cellules[cel].defunits) * m.cellules[cel].coeff) and m.cellules[cel].player != m.me:
+                            target = (distance + m.cellules[cel].offunits + m.cellules[cel].defunits) * m.cellules[cel].coeff
+                            cible = cel
+                            d = distance
+                    
+                    print("target : ", target, " / cible", cible)
+                    
+                    envoi = m.cellules[cellule].offunits -1
+
+                    # order avec comme pourcentage : envoi/cellule.offunits
+                    toSend = round((envoi / m.cellules[cellule].offunits)*100)
+                    order_string = "[" + str(identifiant) + "]MOV" + str(toSend) + "FROM" + str(cellule) + "TO" + str(cible)
+                    print("order string : ", order_string)
+                    order(order_string)
+                #Appel à order : ici --> constituer la string pour pouvoir l'envoyer ensuite
+
+
+            # On gère maintenant les cellules dont le rôle est de ravitailler
+            # On commence par les plus éloignées, comme ca une fois qu'elles ont envoyées leurs unités, les cellules du rang juste en dessous peuvent prendre en compte cela
+            max_rang = 0
+            min_rang = 10000
+            for cell, rang in ravitailleurs.items():
+                max_rang = max(max_rang,rang)
+                min_rang = min(min_rang,rang)
+
+            rang_en_cours = max_rang
+            cellules_en_cours = []
+
+            while rang_en_cours >= min_rang :
+                for cellule, rang in ravitailleurs.items() :
+                    if rang == rang_en_cours :
+                        cellules_en_cours.append(cellule)
+
+                #Pour toutes les cellules du rang en cours
+                for cellule in cellules_en_cours :
+                    calme = True # il n'y a pas de demande d'aide
+
+                    for cel_id, nb_units in aide.items():
+                        if (nb_units != 0):
+                            calme = False
+
+                    if calme == False : # on doit aider
+                        #choisir laquelle cellule aider
+                        #   - envoyer à la voisine la plus proche, qui elle meme enverra à la voisine la plus proche ? parait bien, on ravitaille plus vite
+                        #   - envoyer à la plus grosse demande ? peut etre dangereux s'il y a pleins de cellules, on pourrait ne sauver que celle avec la plus grosse demande
+                        #       et perdre toutes celles avec des petites demandes
+                        #   - envoyer vers les plus petites demandes => on pourrait en sauver plus
+                        #   => tenir compte dans tous les cas de la production des cellules attaquées aussi
+                        
+                        pass
+
+                    else : # Pas de demande d'aide
+                        print("pas de demande d'aide ...")
+                        # On cherche à savoir si on possède déjà toutes les cellules voisines de la cellule
+                        # On a deux choix :
+                        #   - si on ne possède pas toutes les voisines, on peut se permettre de les capturer afin d'augmenter notre production
+                        #   - soit on ravitaille au front
+                        toutes_alliees = True
+                        for cel, dist in m.cellules[cellule].neighbours.items() :
+                            if m.cellules[cel].player != m.me :
+                                toutes_alliees = False
+
+                        #Les cellules voisines ne sont pas toutes alliées
+                        if toutes_alliees == False :
+                            # On détermine la cellule la plus rentable
+                            target = 100000000
+                            d = 0
+
+                            #enlever les cellules alliées lors du parcours
+                            for cel,distance in m.cellules[cellule].neighbours.items():
+                                if (target > (distance + m.cellules[cel].offunits + m.cellules[cel].defunits) * m.cellules[cel].coeff) and m.cellules[cel].player != m.me:
+                                    target = (distance + m.cellules[cel].offunits + m.cellules[cel].defunits) * m.cellules[cel].coeff
+                                    cible = cel
+                                    d = distance
+                            
+                            if (m.cellules[cible].player == -1):
+                                envoi = m.cellules[cellule].offunits -1
+                            else:
+                                #On détermine les troupes à envoyer
+                                max_envoi = int(round(m.cellules[cible].offsize - ( m.cellules[cible].offunits + ( (d * m.cellules[cible].offprod) * m.speed/1000 ) + m.cellules[cible].offprod)))
+
+                                # On regarde cb d'unités on va envoyer en faisant gaffe à ne pas dépasser la capacité maximale d'envoi (max_envoi)
+                                if m.cellules[cellule].offunits <= max_envoi :
+                                    envoi = m.cellules[cellule].offunits - 1
+                                else :
+                                    envoi = max_envoi - 1 #par securite, a voir si necessaire 
+
+                            # order avec comme pourcentage : envoi/cellule.offunits
+                            toSend = round((envoi / m.cellules[cellule].offunits)*100)
+                            order_string = "[" + str(identifiant) + "]MOV" + str(toSend) + "FROM" + str(cellule) + "TO" + str(cible)
+                            order(order_string)
+
+                        else :
+                            #Si les cellules sont toutes alliées autout de nous : on envoie à la cellule alliée la plus proche et de rang inférieur
+                            c_possibles = []
+                            for cel, dist in m.cellules[cellule].neighbours.items():
+                                c_possibles.append((cel, dist))
+
+                            cible_alliee = -1
+                            dist_min = c_possibles[0][1]
+                            for cel in c_possibles:
+                                if (dist_min >= cel[1] and rangs[cel[0]] < rangs[cellule]):
+                                    dist_min = cel[1]
+                                    cible_alliee = cel[0]
+
+                            if cible_alliee != -1:
+                                # la capacité maximale d'unités offensives que peut avoir la cellule (voisine.cel.offsize)
+                                # moins le nombre d'unité offensives déjà présentes (voisine.cel.offunits)
+                                # moins la production qu'aura fait la cellule le temps du trajet ( (voisine.dist*voisine.cell.offprod)*m.speed/1000 ) => tiens compte de la vitesse de jeu
+                                # moins la production effectuée en 2 sec (pour etre sur de ne pas dépasser la limite et perdre d'unités)
+                                #On détermine les troupes à envoyer
+                                max_envoi = int(round(m.cellules[cible_alliee].offsize - ( m.cellules[cible_alliee].offunits + ( (d * m.cellules[cible_alliee].offprod) * m.speed/1000 ) + m.cellules[cible_alliee].offprod)))
+
+                                # On regarde cb d'unités on va envoyer en faisant gaffe à ne pas dépasser la capacité maximale d'envoi (max_envoi)
+                                if m.cellules[cellule].offunits <= max_envoi :
+                                    envoi = m.cellules[cellule].offunits - 1
+                                else :
+                                    envoi = max_envoi - 1 #par securite, a voir si necessaire 
+
+                                # order avec comme pourcentage : envoi/cellule.offunits
+                                toSend = round((envoi / m.cellules[cellule].offunits)*100)
+                                order_string = "[" + str(identifiant) + "]MOV" + str(toSend) + "FROM" + str(cellule) + "TO" + str(cible_alliee)
+                                order(order_string)
+                rang_en_cours -= 1
+                cellules_en_cours = [] 
+
+        elif 'GAMEOVER' in msg: # on arrête d'envoyer des ordres. On observe seulement...
+            order ('[{}]GAMEOVEROK'.format(identifiant))
+            logging.debug('[play_pooo] Received game over: {}'.format(msg))
+        elif 'ENDOFGAME' in msg: # on sort de la boucle de jeu
+            logging.debug('[play_pooo] Received end of game: {}'.format(msg))
+            break
+        else:
+            logging.error('[play_pooo] Unknown msg: {!r}'.format(msg))
+    logging.info('>>> Exit play_pooo function')
+
+
+    
+    
