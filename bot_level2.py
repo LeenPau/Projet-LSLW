@@ -268,9 +268,14 @@ def play_pooo():
                             cible = pred[cellule]
                             if aide[cel] > (m.cellules[cellule].offunits - 1):
                                 envoi = round((m.cellules[cellule].offunits - 1 / m.cellules[cellule].offunits)*100)
-                            order_string = "[" + str(identifiant) + "]MOV" + str(toSend) + "FROM" + str(cellule) + "TO" + str(cible)
-                            order(order_string)
-
+                                aides[cel] -= m.cellules[cellule].offunits -1
+                                order_string = "[" + str(identifiant) + "]MOV" + str(toSend) + "FROM" + str(cellule) + "TO" + str(cible)
+                                order(order_string)
+                            else:
+                                envoi = round((aide[cel] / m.cellules[cellule].offunits)*100)
+                                aide[cel] = 0
+                                order_string = "[" + str(identifiant) + "]MOV" + str(toSend) + "FROM" + str(cellule) + "TO" + str(cible)
+                                order(order_string)
 
                     else : # Pas de demande d'aide
                         # On cherche à savoir si on possède déjà toutes les cellules voisines de la cellule
