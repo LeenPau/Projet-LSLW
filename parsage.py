@@ -114,7 +114,7 @@ def decodage_state(string) :
         data['moves'] = []
 
         #Parsage de la partie CELLS
-        infos = re.search(r"([0-9]CELLS)([:,]?[0-9]\[[-]?[0-9]*\][0-9]*'[0-9]*[,]?)*", string)
+        infos = re.search(r"([0-9]*CELLS)([:,]?[0-9]*\[[-]?[0-9]*\][0-9]*'[0-9]*[,]?)*", string)
         if infos is not None:
             complete = infos.group(0)
             first = complete.split(':')[1]

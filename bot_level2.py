@@ -208,7 +208,7 @@ def play_pooo():
 
                     #enlever les cellules alliées lors du parcours
                     for cel,distance in m.cellules[cellule].neighbours.items():
-                        if (target > (distance + m.cellules[cel].offunits + m.cellules[cel].defunits) * m.cellules[cel].coeff) and m.cellules[cel].player != m.me:
+                        if (target >= (distance + m.cellules[cel].offunits + m.cellules[cel].defunits) * m.cellules[cel].coeff) and m.cellules[cel].player != m.me:
                             target = (distance + m.cellules[cel].offunits + m.cellules[cel].defunits) * m.cellules[cel].coeff
                             cible = cel
                             d = distance
@@ -257,10 +257,22 @@ def play_pooo():
                         #   - envoyer vers les plus petites demandes => on pourrait en sauver plus
                         #   => tenir compte dans tous les cas de la production des cellules attaquées aussi
                         
-                        pass
+                        #on récupère les id de cellules qui ont besoin d'aide
+                        toHelp = []
+                        for cle, help in aide.items():
+                            if help > 0:
+                                toHelp.append(cle)
+
+                        for cel in toHelp:
+                            pred = dijkstra(cellule, cel, matrice)
+                            cible = pred[cellule]
+                            if aide[cel] > (m.cellules[cellule].offunits - 1):
+                                envoi = round((m.cellules[cellule].offunits - 1 / m.cellules[cellule].offunits)*100)
+                            order_string = "[" + str(identifiant) + "]MOV" + str(toSend) + "FROM" + str(cellule) + "TO" + str(cible)
+                            order(order_string)
+
 
                     else : # Pas de demande d'aide
-                        print("pas de demande d'aide ...")
                         # On cherche à savoir si on possède déjà toutes les cellules voisines de la cellule
                         # On a deux choix :
                         #   - si on ne possède pas toutes les voisines, on peut se permettre de les capturer afin d'augmenter notre production
