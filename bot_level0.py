@@ -17,7 +17,7 @@ from poooc import order, state, state_on_update, etime # import des fonctions de
 import logging # mieux que des print partout
 import inspect # pour faire de l'introspection
 from parsage import *
-from struct import *
+from sdd import *
 from random import randint
 from topologie import *
 
@@ -63,23 +63,32 @@ Active le robot-joueur
 def play_pooo():
     logging.info('Entering play_pooo fonction from {} module...'.format(inspect.currentframe().f_back.f_code.co_filename))
     while True :
-        state_string = state_on_update()
-        data_state = decodage_state(state_string)
-        
-        cells = data_state['cells'] #informations sur les cellules
-        moves = data_state['moves'] #informations sur les mouvements
+        msg=state_on_update()
+        if 'STATE' in msg:
+            logging.debug('[play_pooo] Received state: {}'.format(msg))
+            data_state = decodage_state(msg)
+            
+            cells = data_state['cells'] #informations sur les cellules
+            moves = data_state['moves'] #informations sur les mouvements
 
-        #Mise à jour de la structure / INFOS MOVES
-        if cells != 0:
-            for cellule in cells:
-                cell_temp = m.cellules[cellule['cellid']]
-                cell_temp.update(cellule)
+            #Mise à jour de la structure / INFOS MOVES
+            if cells != 0:
+                for cellule in cells:
+                    cell_temp = m.cellules[cellule['cellid']]
+                    cell_temp.update(cellule)
 
-        if moves != 0:
-            for move in moves:
-                time = etime()
-                m.moves_history[time] = move
+            if moves != 0:
+                for move in moves:
+                    time = etime()
+                    m.moves_history[time] = move
 
-        #print(m.moves_history)
-        # (5) TODO: traitement de state et transmission d'ordres order(msg)
-        
+        elif 'GAMEOVER' in msg: # on arrête d'envoyer des ordres. On observe seulement...
+            order ('[{}]GAMEOVEROK'.format(identifiant))
+            logging.debug('[play_pooo] Received game over: {}'.format(msg))
+        elif 'ENDOFGAME' in msg: # on sort de la boucle de jeu
+            logging.debug('[play_pooo] Received end of game: {}'.format(msg))
+            break
+        else:
+            logging.error('[play_pooo] Unknown msg: {!r}'.format(msg))
+    logging.info('>>> Exit play_pooo function')
+            

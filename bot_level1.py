@@ -17,7 +17,7 @@ from poooc import order, state, state_on_update, etime # import des fonctions de
 import logging # mieux que des print partout
 import inspect # pour faire de l'introspection
 from parsage import *
-from struct import *
+from sdd import *
 from random import randint
 
 
@@ -62,42 +62,54 @@ Active le robot-joueur
 def play_pooo():
     logging.info('Entering play_pooo fonction from {} module...'.format(inspect.currentframe().f_back.f_code.co_filename))
     while True :
-        state_string = state_on_update()
-        data_state = decodage_state(state_string)
-        
-        cells = data_state['cells'] #informations sur les cellules
-        moves = data_state['moves'] #informations sur les mouvements
+        msg=state_on_update()
+        if 'STATE' in msg:
+            state_string = state_on_update()
+            data_state = decodage_state(state_string)
+            
+            cells = data_state['cells'] #informations sur les cellules
+            moves = data_state['moves'] #informations sur les mouvements
 
-        #Mise à jour de la structure / INFOS MOVES
-        if cells != 0:
-            for cellule in cells:
-                cell_temp = m.cellules[cellule['cellid']]
-                cell_temp.update(cellule)
+            #Mise à jour de la structure / INFOS MOVES
+            if cells != 0:
+                for cellule in cells:
+                    cell_temp = m.cellules[cellule['cellid']]
+                    cell_temp.update(cellule)
 
-        if moves != 0:
-            for move in moves:
-                time = etime()
-                m.moves_history[time] = move
-        #print(m.moves_history)
+            if moves != 0:
+                for move in moves:
+                    time = etime()
+                    m.moves_history[time] = move
+            #print(m.moves_history)
 
-        #Affichage de toutes les cellules
-        for key,value in m.cellules.items():
-            print(value)
+            #Affichage de toutes les cellules
+            for key,value in m.cellules.items():
+                print(value)
 
-        # (5) TODO: traitement de state et transmission d'ordres order(msg)
-        #Stratégie d'envoi systématique dès qu'une cellule a au moins 5 unités offensives elle les envoie à une cellule voisine (ennemie ou alliée)
-        for cle,cellule in m.cellules.items():
-            for key_voisin,voisin in cellule.neighbours.items():
-                compteur = 0
-                dest = 0
-                rand = randint(0,len(cellule.neighbours)-1)
-                for key in cellule.neighbours.keys():
-                    if compteur == rand:
-                        dest = key
-                        break
-                    else:
-                        compteur += 1
-            if(m.cellules[cle].offunits >= 5):
-                order_string = "[" + str(identifiant) + "]" + "MOV50FROM" + str(cle) + "TO" + str(dest)
-                print("order string : ", order_string) 
-                order(order_string)
+            # (5) TODO: traitement de state et transmission d'ordres order(msg)
+            #Stratégie d'envoi systématique dès qu'une cellule a au moins 5 unités offensives elle les envoie à une cellule voisine (ennemie ou alliée)
+            for cle,cellule in m.cellules.items():
+                for key_voisin,voisin in cellule.neighbours.items():
+                    compteur = 0
+                    dest = 0
+                    rand = randint(0,len(cellule.neighbours)-1)
+                    for key in cellule.neighbours.keys():
+                        if compteur == rand:
+                            dest = key
+                            break
+                        else:
+                            compteur += 1
+                if(m.cellules[cle].offunits >= 5):
+                    order_string = "[" + str(identifiant) + "]" + "MOV50FROM" + str(cle) + "TO" + str(dest)
+                    print("order string : ", order_string) 
+                    order(order_string)
+        elif 'GAMEOVER' in msg: # on arrête d'envoyer des ordres. On observe seulement...
+            order ('[{}]GAMEOVEROK'.format(identifiant))
+            logging.debug('[play_pooo] Received game over: {}'.format(msg))
+        elif 'ENDOFGAME' in msg: # on sort de la boucle de jeu
+            logging.debug('[play_pooo] Received end of game: {}'.format(msg))
+            break
+        else:
+            logging.error('[play_pooo] Unknown msg: {!r}'.format(msg))
+    logging.info('>>> Exit play_pooo function')
+

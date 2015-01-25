@@ -17,7 +17,7 @@ from poooc import order, state, state_on_update, etime # import des fonctions de
 import logging # mieux que des print partout
 import inspect # pour faire de l'introspection
 from parsage import *
-from struct import *
+from sdd import *
 from random import randint
 from topologie import dijkstra, set_rang
 
